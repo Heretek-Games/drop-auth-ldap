@@ -5,5 +5,5 @@ LDAP/Active Directory authentication connector plugin for Drop (#230).
 ## Build
 
 ```sh
-pnpm install && pnpm build && pnpm test
+npm ci && npm run build && npm test && npm run typecheck
 ```
