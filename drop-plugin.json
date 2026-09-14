@@ -1,0 +1,19 @@
+{
+  "id": "drop-auth-ldap",
+  "name": "LDAP Auth Connector",
+  "version": "0.1.0",
+  "description": "LDAP/Active Directory authentication connector",
+  "author": "Heretek Games",
+  "apiVersion": 2,
+  "trust": "trusted",
+  "storageVersion": 1,
+  "capabilities": [
+    "routes",
+    "storage",
+    "network"
+  ],
+  "targets": [
+    "server"
+  ],
+  "entry": "dist/src/index.js"
+}
