@@ -5,10 +5,11 @@ LDAP/Active Directory authentication connector plugin for Drop (#230).
 ## Commands
 
 ```sh
-pnpm install
-pnpm build
-pnpm test
+npm ci
+npm run build
+npm test
+npm run typecheck
 ```
 
-Built on `@droposs/plugin-sdk` (plugin API v2); the dependency resolves the
-sibling checkout at `../drop-plugin-sdk/packages/plugin-sdk`.
+Built on `@droposs/plugin-sdk` (plugin API v2), resolved from the npm registry
+(currently `^0.4.0`).
