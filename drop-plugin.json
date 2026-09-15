@@ -15,5 +15,26 @@
   "targets": [
     "server"
   ],
-  "entry": "dist/src/index.js"
+  "entry": "dist/src/index.js",
+  "checksum": "c3b69c3c3511869f0a2b45868b2124186c173838678c10a51176bf8861cd4c14",
+  "files": {
+    ".github/dependabot.yml": "fe156952d1952825377de8e48c90563a3ac19bb95a6e0ced8a2f498a0f20fdf6",
+    ".github/workflows/ci.yml": "60a33a67813097e4744a54b21d8af35e6c0254e56001123a69f34ccf65d1fa8b",
+    ".gitignore": "e8bc935ce727f1809c792f4c5d26c5fc75ba2b7df7fc9390c56c8892f6a6007f",
+    "AGENTS.md": "e75cc5724ec24268ced27cb8effdd0cae0f4ba3dc1314db2b7b07c6165d8e8ed",
+    "CLAUDE.md": "3b2c8a6a80fe79fa9ee0680b86d2e84ce0b9255d3dc43eccd4e2fce59064c7da",
+    "dist/src/index.d.ts": "b76dab309887a53e9145ed30c04d2f42be440d85e59a26a9c6395fcd62b94d08",
+    "dist/src/index.js": "c3b69c3c3511869f0a2b45868b2124186c173838678c10a51176bf8861cd4c14",
+    "dist/test/ldap.test.d.ts": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+    "dist/test/ldap.test.js": "ec642a8748c51e7fc265079f30bdbd6b09a61c9ba7618ea5b894091e490b6a54",
+    "eslint.config.mjs": "4cdf67d5a07b1a089d8f39e842a7de7532eb519752d60fe5ac706f42fb7bdc6f",
+    "GEMINI.md": "3b2c8a6a80fe79fa9ee0680b86d2e84ce0b9255d3dc43eccd4e2fce59064c7da",
+    "package-lock.json": "2af5533b7f4d6e229d89fa722ed708a6b7dd44871bd363068b729c2f62ae3898",
+    "package.json": "a8dde5070cb5909e71c1277998f23c3029636cf08b95a1c99aacb44b2fdfda6c",
+    "README.md": "c3c0ac703d458ba833037d2bfee9b449d3bc786891cb5cb0ccc89791d4792c37",
+    "SECURITY.md": "1ed84c5e2293a1bda1e0d1650df39f5c03dba9a18ee6d8acff78cc10a6897d2d",
+    "src/index.ts": "520fc96c928e1164a29e98e8c09929afe96421eb538bd70cb38b6268e71cea74",
+    "test/ldap.test.ts": "eabbd65fb994827ca53ffffadca0a03e967da13904c1989700425cfeace84976",
+    "tsconfig.json": "e67d6d62d5af3c653c4d1af30dea94d529c721708e54bd8609d748be627e79e5"
+  }
 }
