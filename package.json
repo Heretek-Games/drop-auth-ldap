@@ -12,11 +12,11 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@droposs/plugin-sdk": "^0.6.0",
+    "@droposs/plugin-sdk": "^0.6.1",
     "ldapts": "^9.0.0"
   },
   "devDependencies": {
-    "@droposs/plugin-cli": "^0.6.0",
+    "@droposs/plugin-cli": "^0.6.1",
     "typescript": "^5.7.2",
     "@types/node": "^22.0.0",
     "@eslint/js": "^10.0.1",
