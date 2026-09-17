@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global process, console */
 
 import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
@@ -69,11 +70,7 @@ function rewritePackageJson(file, text) {
         continue;
       }
       const target = `${scope}/${kind}`;
-      if (section[dep].startsWith("file:") || section[dep].startsWith("workspace:") || section[dep].startsWith("npm:")) {
-        rebuilt[target] = kind === "plugin-sdk" ? sdkVersion : cliVersion;
-      } else {
-        rebuilt[target] = section[dep];
-      }
+      rebuilt[target] = kind === "plugin-sdk" ? sdkVersion : cliVersion;
     }
     pkg[sectionName] = rebuilt;
   }
