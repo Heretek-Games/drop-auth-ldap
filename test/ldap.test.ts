@@ -45,16 +45,21 @@ function routeOf(ctx: MockPluginContext, method: string, pattern: string) {
 
 const emptyContext: RouteHandlerContext = { params: {}, query: {} };
 
-test("drop-auth-ldap registers config and verify routes", async () => {
+test("drop-auth-ldap registers config routes and the LDAP AuthProvider", async () => {
   const ctx = new MockPluginContext("drop-auth-ldap", [
     "routes",
     "storage",
     "network",
+    "auth:provider",
   ]);
   await new Plugin().init(ctx);
   assert.ok(ctx.routes.has("GET /config"));
   assert.ok(ctx.routes.has("POST /config"));
-  assert.ok(ctx.routes.has("POST /verify"));
+  assert.equal(ctx.routes.has("POST /verify"), false);
+  assert.equal(
+    ctx.authProviders.get("ldap")?.name,
+    "LDAP / Active Directory",
+  );
 });
 
 test("verifyCredentials binds with the expanded user DN", async () => {
@@ -119,6 +124,7 @@ test("POST /config persists host/baseDn/bindDn and never stores passwords", asyn
     "routes",
     "storage",
     "network",
+    "auth:provider",
   ]);
   const { factory, calls } = fakeClientFactory({});
   await new Plugin(factory).init(ctx);
@@ -157,12 +163,15 @@ test("POST /config persists host/baseDn/bindDn and never stores passwords", asyn
   assert.ok(!JSON.stringify(stored).includes("hunter2"));
   assert.ok(!logs.join("\n").includes("hunter2"));
 
-  const verify = routeOf(ctx, "POST", "/verify");
-  const verified = await verify(
-    { body: { username: "carol", password: "pw" } },
-    emptyContext,
-  );
-  assert.deepEqual(verified, { authenticated: true });
+  const verify = ctx.authProviders.get("ldap");
+  assert.ok(verify);
+  const verified = await verify.authenticate({
+    username: "carol",
+    password: "pw",
+  });
+  assert.equal(verified.authenticated, true);
+  assert.equal(verified.user?.externalId, "carol");
+  assert.equal(verified.user?.username, "carol");
   assert.equal(calls.bound[0].dn, "cn=carol,ou=staff,dc=example,dc=com");
 });
 
@@ -171,6 +180,7 @@ test("POST /config rejects malformed input", async () => {
     "routes",
     "storage",
     "network",
+    "auth:provider",
   ]);
   await new Plugin().init(ctx);
   const handler = routeOf(ctx, "POST", "/config");
@@ -194,18 +204,22 @@ test("POST /config rejects malformed input", async () => {
   });
 });
 
-test("POST /verify fails closed when unconfigured or when the directory is down", async () => {
+test("AuthProvider fails closed when unconfigured or when the directory is down", async () => {
   const ctx = new MockPluginContext("drop-auth-ldap", [
     "routes",
     "storage",
     "network",
+    "auth:provider",
   ]);
   await new Plugin().init(ctx);
-  const verify = routeOf(ctx, "POST", "/verify");
-  await assert.rejects(
-    async () => verify({ body: { username: "a", password: "b" } }, emptyContext),
-    /not configured/,
-  );
+  const provider = ctx.authProviders.get("ldap");
+  assert.ok(provider);
+  const unconfigured = await provider.authenticate({
+    username: "a",
+    password: "b",
+  });
+  assert.equal(unconfigured.authenticated, false);
+  assert.equal(unconfigured.unavailable, true);
 
   const { factory } = fakeClientFactory({
     bind: async () => {
@@ -216,13 +230,40 @@ test("POST /verify fails closed when unconfigured or when the directory is down"
     "routes",
     "storage",
     "network",
+    "auth:provider",
   ]);
   await ctx2.storage.set("ldap_config", CONFIG);
   await new Plugin(factory).init(ctx2);
-  const verify2 = routeOf(ctx2, "POST", "/verify");
-  const result = await verify2(
-    { body: { username: "a", password: "b" } },
-    emptyContext,
-  );
-  assert.deepEqual(result, { authenticated: false, unavailable: true });
+  const provider2 = ctx2.authProviders.get("ldap");
+  assert.ok(provider2);
+  const outage = await provider2.authenticate({
+    username: "a",
+    password: "b",
+  });
+  assert.equal(outage.authenticated, false);
+  assert.equal(outage.unavailable, true);
+  assert.equal(outage.error, "socket hang up");
+});
+
+test("AuthProvider reports invalid credentials without marking the provider unavailable", async () => {
+  const { factory } = fakeClientFactory({
+    bind: async () => {
+      throw new InvalidCredentialsError();
+    },
+  });
+  const ctx = new MockPluginContext("drop-auth-ldap", [
+    "routes",
+    "storage",
+    "network",
+    "auth:provider",
+  ]);
+  await ctx.storage.set("ldap_config", CONFIG);
+  await new Plugin(factory).init(ctx);
+  const provider = ctx.authProviders.get("ldap");
+  assert.ok(provider);
+  const result = await provider.authenticate({
+    username: "alice",
+    password: "wrong",
+  });
+  assert.deepEqual(result, { authenticated: false });
 });

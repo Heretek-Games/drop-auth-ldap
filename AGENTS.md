@@ -1,6 +1,8 @@
 # AGENTS.md — drop-auth-ldap
 
-LDAP/Active Directory authentication connector plugin for Drop (#230).
+LDAP/Active Directory authentication connector plugin for Drop (#230). Provides
+the `auth:provider` SPI implementation (`apiVersion` 2), resolved from the npm
+registry (currently `@droposs/plugin-sdk` `^0.7.0`).
 
 ## Commands
 
@@ -11,5 +13,4 @@ npm test
 npm run typecheck
 ```
 
-Built on `@droposs/plugin-sdk` (plugin API v2), resolved from the npm registry
-(currently `^0.4.0`).
+Built on `@droposs/plugin-sdk`, resolved from the npm registry (currently `^0.7.0`).

@@ -1,5 +1,11 @@
 import { Client, InvalidCredentialsError } from "ldapts";
-import type { PluginContext, ServerPlugin } from "@droposs/plugin-sdk";
+import type {
+  AuthProvider,
+  AuthResult,
+  AuthUser,
+  PluginContext,
+  ServerPlugin,
+} from "@droposs/plugin-sdk";
 
 export interface LdapConfig {
   /** LDAP URL (proto/host/port only), e.g. `ldaps://dc.example.com:636`. */
@@ -120,18 +126,74 @@ export default class LdapAuthPlugin implements ServerPlugin {
     name: "LDAP Auth Connector",
     version: "0.1.0",
     apiVersion: 2,
-    capabilities: ["routes" as const, "storage" as const, "network" as const],
+    capabilities: [
+      "routes" as const,
+      "storage" as const,
+      "network" as const,
+      "auth:provider" as const,
+    ],
   };
 
   private config: LdapConfig | null = null;
 
   constructor(private readonly createClient?: LdapClientFactory) {}
 
+  /** SPI implementation registered with the host login flow. */
+  readonly authProvider: AuthProvider = {
+    id: "ldap",
+    name: "LDAP / Active Directory",
+    authenticate: ({ username, password }) =>
+      this.authenticate(username, password),
+  };
+
+  /**
+   * Map a real LDAP simple bind onto the host `AuthProvider` contract. A
+   * directory rejection is `authenticated: false`; a transport/server failure
+   * is `unavailable: true` so the host can distinguish an outage from a bad
+   * password instead of failing the user's login.
+   */
+  private async authenticate(
+    username: string,
+    password: string,
+  ): Promise<AuthResult> {
+    const config = this.config;
+    if (!config) {
+      return {
+        authenticated: false,
+        error: "LDAP connector is not configured",
+        unavailable: true,
+      };
+    }
+    if (!username || !password) return { authenticated: false };
+
+    try {
+      const authenticated = await verifyCredentials(
+        config,
+        { username, password },
+        this.createClient,
+      );
+      if (!authenticated) return { authenticated: false };
+      const user: AuthUser = { externalId: username, username };
+      return { authenticated: true, user };
+    } catch (error) {
+      return {
+        authenticated: false,
+        error: (error as Error).message,
+        unavailable: true,
+      };
+    }
+  }
+
   async init(ctx: PluginContext): Promise<void> {
     this.config = await ctx.storage.get<LdapConfig>(CONFIG_KEY);
     if (!this.config) {
       ctx.logger.warn("LDAP connector installed without a saved config");
     }
+
+    if (!ctx.registerAuthProvider) {
+      throw new Error("Host does not support the 'auth:provider' SPI");
+    }
+    ctx.registerAuthProvider(this.authProvider);
 
     ctx.registerRoute("GET", "/config", async () => publicConfig(this.config));
 
@@ -142,28 +204,6 @@ export default class LdapAuthPlugin implements ServerPlugin {
       this.config = config;
       ctx.logger.info(`LDAP connector configured for ${config.url}`);
       return publicConfig(config);
-    });
-
-    ctx.registerRoute("POST", "/verify", async (event) => {
-      const config = this.config;
-      if (!config) throw new Error("LDAP connector is not configured");
-      const body = (event as { body?: Partial<Credentials> }).body ?? {};
-      const username = String(body.username ?? "");
-      const password = String(body.password ?? "");
-      if (!username || !password) return { authenticated: false };
-      try {
-        const authenticated = await verifyCredentials(
-          config,
-          { username, password },
-          this.createClient,
-        );
-        return { authenticated };
-      } catch (error) {
-        ctx.logger.error(
-          `LDAP bind failed for ${username}: ${(error as Error).message}`,
-        );
-        return { authenticated: false, unavailable: true };
-      }
     });
 
     ctx.logger.info("LDAP auth connector initialized");
