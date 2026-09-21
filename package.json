@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@droposs/plugin-sdk": "^0.7.0",
-    "ldapts": "^9.0.0"
+    "ldapts": "^9.2.0"
   },
   "devDependencies": {
     "@droposs/plugin-cli": "^0.7.0",
